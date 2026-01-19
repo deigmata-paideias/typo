@@ -35,7 +35,7 @@ formatters:
         # Contains all imports that could not be matched to another section type.
         - default
         # Groups all imports with the specified Prefix.
-        - prefix(hertzbeat.apache.org/hertzbeat-collector-go)
+        - prefix(github.com/deigmata-paideias/typoo)
     gofmt:
       simplify: true
     gofumpt:
@@ -44,7 +44,7 @@ formatters:
       # put imports beginning with prefix after 3rd-party packages;
       # it's a comma-separated list of prefixes
       local-prefixes:
-        - hertzbeat.apache.org/hertzbeat-collector-go
+        - github.com/deigmata-paideias/typo
 issues:
   # Show the complete output
   max-issues-per-linter: 0
