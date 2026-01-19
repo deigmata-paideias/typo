@@ -1,6 +1,6 @@
-VERSION_PACKAGE := hertzbeat.apache.org/hertzbeat-collector-go/internal/cmd/version
+VERSION_PACKAGE := github.com/deigmata-paideias/typo/internal/cmd/version
 
-GO_LDFLAGS += -X $(VERSION_PACKAGE).hcgVersion=$(shell cat VERSION) \
+GO_LDFLAGS += -X $(VERSION_PACKAGE).typoVersion=$(shell cat VERSION) \
 	-X $(VERSION_PACKAGE).gitCommitID=$(GIT_COMMIT)
 
 GIT_COMMIT:=$(shell git rev-parse HEAD)
