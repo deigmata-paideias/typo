@@ -1,8 +1,6 @@
 package scanner
 
 import (
-	"fmt"
-
 	"github.com/deigmata-paideias/typo/internal/utils"
 )
 
@@ -19,12 +17,11 @@ func NewAliasScanner() IScanner {
 
 func (a *AliasScanner) Scan() (string, error) {
 
-	output, err := utils.ExecShell("alias")
+	// System alias, contain zsh and bash etc.
+	output, err := utils.ExecCommand("zsh", "-i", "-c", "alias")
 	if err != nil {
 		return "", err
 	}
-
-	fmt.Println("输出：", output)
 
 	return output, nil
 }

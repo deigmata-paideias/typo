@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/deigmata-paideias/typo/internal/scanner"
+	"github.com/deigmata-paideias/typo/internal/scanner/custom"
 	"github.com/spf13/cobra"
 )
 
@@ -42,6 +43,13 @@ func runScanner(types commandType) error {
 			return err
 		}
 		fmt.Println(output)
+		// add custom
+		gitAliasScanner := custom.NewGitAliasScanner()
+		gitOutput, err := gitAliasScanner.Scan()
+		if err != nil {
+			return err
+		}
+		fmt.Println(gitOutput)
 	case man:
 		manScanner := scanner.NewManScanner()
 		output, err := manScanner.Scan()
