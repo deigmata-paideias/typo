@@ -20,6 +20,10 @@ type CommandRecord struct {
 	LastOccurAt  time.Time `db:"last_occur_at" json:"last_occur_at"`   // 最后出现时间
 }
 
+func (c *CommandRecord) TableName() string {
+	return "command_records"
+}
+
 // CorrectionRule 纠错规则
 type CorrectionRule struct {
 	ID          int64  `db:"id"`
@@ -27,6 +31,10 @@ type CorrectionRule struct {
 	Replacement string `db:"replacement"` // 替换为
 	Category    string `db:"category"`    // 分类 (git.branch, docker.run等)
 	Priority    int    `db:"priority"`    // 优先级
+}
+
+func (c *CorrectionRule) TableName() string {
+	return "correction_rules"
 }
 
 // CommandAlias 命令别名
@@ -38,10 +46,18 @@ type CommandAlias struct {
 	UserID   string `db:"user_id"`  // 用户ID (空为全局)
 }
 
+func (c *CommandAlias) TableName() string {
+	return "command_aliases"
+}
+
 // CommandCategory 命令分类
 type CommandCategory struct {
 	ID         int64  `db:"id"`
 	Category   string `db:"category"`    // 分类名 (git.branch, docker.run等)
 	Parent     string `db:"parent"`      // 父命令 (git, docker等)
 	SubCommand string `db:"sub_command"` // 子命令 (branch, run等)
+}
+
+func (c *CommandCategory) TableName() string {
+	return "command_categories"
 }

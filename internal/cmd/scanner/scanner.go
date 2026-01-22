@@ -3,6 +3,7 @@ package scanner
 import (
   "fmt"
 
+  "github.com/deigmata-paideias/typo/internal/repository"
   "github.com/deigmata-paideias/typo/internal/scanner"
   "github.com/deigmata-paideias/typo/internal/scanner/custom"
   "github.com/deigmata-paideias/typo/internal/types"
@@ -27,7 +28,10 @@ func RunScanner(t types.CommandType) error {
 }
 
 func execAliasScanner() error {
-  aliasScanner := scanner.NewAliasScanner()
+
+  repo := repository.NewRepository()
+  aliasScanner := scanner.NewAliasScanner(repo)
+
   output, err := aliasScanner.Scan()
   if err != nil {
     return err
@@ -45,7 +49,10 @@ func execAliasScanner() error {
 }
 
 func execManScanner() error {
-  manScanner := scanner.NewManScanner()
+
+  repo := repository.NewRepository()
+  manScanner := scanner.NewManScanner(repo)
+
   output, err := manScanner.Scan()
   if err != nil {
     return err

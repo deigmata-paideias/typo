@@ -1,21 +1,43 @@
 package typo
 
-import "fmt"
+import (
+  "fmt"
+
+  "github.com/deigmata-paideias/typo/internal/repository"
+)
 
 type ITypo interface {
-	// Typo 输入错误的命令，返回正确的命令
-	Typo(cmd string) string
+  // Typo 输入错误的命令，返回正确的命令
+  Typo(cmd string) string
 }
 
-type Typo struct {
+type LocalTypo struct {
+  repository.IRepository
 }
 
-func NewTypo() *Typo {
-	return &Typo{}
+func NewLocalTypo(repo repository.IRepository) ITypo {
+
+  return &LocalTypo{
+    repo,
+  }
 }
 
-func (t *Typo) Typo(cmd string) string {
+func (t *LocalTypo) Typo(cmd string) string {
 
-	fmt.Println(cmd)
-	return cmd
+  fmt.Println(cmd)
+  return cmd
+}
+
+type LlmTypo struct {
+}
+
+func NewLlmTypo() ITypo {
+  return &LlmTypo{}
+}
+
+func (t *LlmTypo) Typo(cmd string) string {
+
+  // todo: call llm api to get correct command
+  fmt.Println(cmd)
+  return cmd
 }

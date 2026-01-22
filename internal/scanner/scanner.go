@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"github.com/deigmata-paideias/typo/internal/repository"
 	"github.com/deigmata-paideias/typo/internal/utils"
 )
 
@@ -9,10 +10,14 @@ type IScanner interface {
 }
 
 type AliasScanner struct {
+	repository.IRepository
 }
 
-func NewAliasScanner() IScanner {
-	return &AliasScanner{}
+func NewAliasScanner(repo repository.IRepository) IScanner {
+
+	return &AliasScanner{
+		repo,
+	}
 }
 
 func (a *AliasScanner) Scan() (string, error) {
@@ -27,10 +32,14 @@ func (a *AliasScanner) Scan() (string, error) {
 }
 
 type ManScanner struct {
+	repository.IRepository
 }
 
-func NewManScanner() IScanner {
-	return &ManScanner{}
+func NewManScanner(repo repository.IRepository) IScanner {
+
+	return &ManScanner{
+		repo,
+	}
 }
 
 func (m *ManScanner) Scan() (string, error) {

@@ -1,10 +1,14 @@
 package typo
 
-import "github.com/deigmata-paideias/typo/internal/typo"
+import (
+	"github.com/deigmata-paideias/typo/internal/repository"
+	"github.com/deigmata-paideias/typo/internal/typo"
+)
 
 func RunTypo() error {
 
-	typoInstance := typo.NewTypo()
+	repo := repository.NewRepository()
+	typoInstance := typo.NewLocalTypo(repo)
 	typoInstance.Typo("test")
 
 	return nil
