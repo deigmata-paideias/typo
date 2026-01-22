@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"github.com/deigmata-paideias/typo/internal/typo"
 	"github.com/spf13/cobra"
+
+	"github.com/deigmata-paideias/typo/internal/cmd/typo"
 )
 
 func TypoCommand() *cobra.Command {
@@ -12,17 +13,9 @@ func TypoCommand() *cobra.Command {
 		Aliases: []string{"run", "r"},
 		Short:   "Run typo to fix your command.",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return runTypo()
+			return typo.RunTypo()
 		},
 	}
 
 	return cmd
-}
-
-func runTypo() error {
-
-	typoInstance := typo.NewTypo()
-	typoInstance.Typo("test")
-
-	return nil
 }

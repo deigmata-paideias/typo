@@ -4,6 +4,13 @@ import (
 	"time"
 )
 
+type CommandType string
+
+const (
+	Alias CommandType = "alias"
+	Man   CommandType = "man"
+)
+
 type CommandRecord struct {
 	ID           int64     `db:"id" json:"id"`                         // 主键
 	WrongCommand string    `db:"wrong_command" json:"wrong_command"`   // 错误命令
