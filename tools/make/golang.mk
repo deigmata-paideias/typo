@@ -1,7 +1,8 @@
 VERSION_PACKAGE := github.com/deigmata-paideias/typo/internal/cmd/version
 
 GO_LDFLAGS += -X $(VERSION_PACKAGE).typoVersion=$(shell cat VERSION) \
-	-X $(VERSION_PACKAGE).gitCommitID=$(GIT_COMMIT)
+	-X $(VERSION_PACKAGE).gitCommitID=$(GIT_COMMIT) \
+	-w -s
 
 GIT_COMMIT:=$(shell git rev-parse HEAD)
 
@@ -33,7 +34,7 @@ build: ## Golang build, support cross-compile: make build GOOS=linux GOARCH=amd6
 	@version=$$(cat VERSION); \
 	echo "Building for $(GOOS)/$(GOARCH)..."; \
 	mkdir -p bin/$(GOOS)/$(GOARCH); \
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o bin/$(GOOS)/$(GOARCH)/typo -ldflags "$(GO_LDFLAGS)" cmd/main.go
+	CGO_ENABLED=1 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o bin/$(GOOS)/$(GOARCH)/typo -ldflags "$(GO_LDFLAGS)" cmd/main.go
 
 .PHONY: all-platform-build
 all-platform-build: ## Build for all platforms (linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64)
