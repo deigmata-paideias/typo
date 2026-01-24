@@ -20,6 +20,8 @@ Github Repo：https://github.com/nvbn/thefuck
 - 使用 typo 可以，修复上一条 typo 的错误命令；
 - 在忘记具体的命令时，可以模糊搜索并执行。
 
+> 和 thefuck 不同的是，thefuck 使用规则配置，而 typo 依赖系统命令。
+
 ## 实现原理
 
 1. 命令修正：用莱文斯坦距离（Levenshtein distance）等算法计算相似度；
