@@ -11,7 +11,7 @@ func TypoCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "run",
 		Aliases: []string{"run", "r"},
-		Short:   "Run typo to fix your command.",
+		Short:   "Each time it displays the 5 most probable commands; you can then use the up/down arrow keys to select and execute one.",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return typo.RunTypo()
 		},

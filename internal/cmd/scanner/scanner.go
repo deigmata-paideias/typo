@@ -1,63 +1,58 @@
 package scanner
 
 import (
-  "fmt"
+	"fmt"
 
-  "github.com/deigmata-paideias/typo/internal/repository"
-  "github.com/deigmata-paideias/typo/internal/scanner"
-  "github.com/deigmata-paideias/typo/internal/scanner/custom"
-  "github.com/deigmata-paideias/typo/internal/types"
+	"github.com/deigmata-paideias/typo/internal/repository"
+	"github.com/deigmata-paideias/typo/internal/scanner"
+	"github.com/deigmata-paideias/typo/internal/scanner/custom"
+	"github.com/deigmata-paideias/typo/internal/types"
 )
 
 func RunScanner(t types.CommandType) error {
 
-  switch t {
-  case types.Alias:
-    if err := execAliasScanner(); err != nil {
-      return err
-    }
-  case types.Man:
-    if err := execManScanner(); err != nil {
-      return err
-    }
-  default:
-    fmt.Println("not support")
-  }
+	switch t {
+	case types.Alias:
+		if err := execAliasScanner(); err != nil {
+			return err
+		}
+	case types.Man:
+		if err := execManScanner(); err != nil {
+			return err
+		}
+	default:
+		fmt.Println("not support")
+	}
 
-  return nil
+	return nil
 }
 
 func execAliasScanner() error {
 
-  repo := repository.NewRepository()
-  aliasScanner := scanner.NewAliasScanner(repo)
+	repo := repository.NewRepository()
+	// custom plugin
+	gitAliasScanner := custom.NewGitAliasScanner(repo)
 
-  output, err := aliasScanner.Scan()
-  if err != nil {
-    return err
-  }
-  fmt.Println(output)
-  // add custom
-  gitAliasScanner := custom.NewGitAliasScanner()
-  gitOutput, err := gitAliasScanner.Scan()
-  if err != nil {
-    return err
-  }
-  fmt.Println(gitOutput)
+	aliasScanner := scanner.NewAliasScanner(
+		repo,
+		[]scanner.IScanner{gitAliasScanner},
+	)
 
-  return nil
+	if _, err := aliasScanner.Scan(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func execManScanner() error {
 
-  repo := repository.NewRepository()
-  manScanner := scanner.NewManScanner(repo)
+	repo := repository.NewRepository()
+	manScanner := scanner.NewManScanner(repo)
 
-  output, err := manScanner.Scan()
-  if err != nil {
-    return err
-  }
-  fmt.Println(output)
+	if _, err := manScanner.Scan(); err != nil {
+		return err
+	}
 
-  return nil
+	return nil
 }

@@ -13,6 +13,33 @@ Github Repo：https://github.com/nvbn/thefuck
 
 ## Typo
 
-设想中的 typo 命令足够专注，它只修正上一次 terminal 输入的错误 command；
+设想中的 typo 命令足够专注，它只修正上一次 terminal 输入的错误 command 并且尝试运行；
 
-不根据上下文推荐此时应该执行什么 command 和执行 command 等其他功能。
+不根据上下文推荐此时应该执行什么 command 其他功能。
+
+## 实现原理
+
+1. 命令修正：用莱文斯坦距离（Levenshtein distance）等算法计算相似度；
+2. 命令存储：
+   1. 自动扫描 man 里面的命令列表；
+   2. 用户自定义的 alias 配置；
+3. 用户选择以执行。
+
+## oh-my-zsh 集成
+
+```
+mkdir -p ~/.oh-my-zsh/custom/plugins/typo
+cp ~/project/indi/typo/zsh/typo.plugin.zsh ~/.oh-my-zsh/custom/plugins/typo/typo.plugin.zsh
+```
+
+然后在 ~/.zshrc 中添加 typo 插件：
+
+```
+plugins=(... typo)
+```
+
+最后执行 source ~/.zshrc，按两下 esc 执行 typo 命令。
+
+### 效果演示
+
+

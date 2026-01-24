@@ -1,43 +1,68 @@
 package typo
 
 import (
-  "fmt"
+	"strings"
 
-  "github.com/deigmata-paideias/typo/internal/repository"
+	"github.com/deigmata-paideias/typo/internal/repository"
+	"github.com/deigmata-paideias/typo/internal/scanner"
+	"github.com/deigmata-paideias/typo/internal/types"
+	"github.com/deigmata-paideias/typo/internal/utils"
 )
 
 type ITypo interface {
-  // Typo 输入错误的命令，返回正确的命令
-  Typo(cmd string) string
+	// Typo 返回修正的命令候选列表和原始命令
+	Typo() (string, []types.MatchResult, error)
 }
 
 type LocalTypo struct {
-  repository.IRepository
+	repo repository.IRepository
+	hs   scanner.IScanner
 }
 
-func NewLocalTypo(repo repository.IRepository) ITypo {
+func NewLocalTypo(repo repository.IRepository, hs scanner.IScanner) ITypo {
 
-  return &LocalTypo{
-    repo,
-  }
+	return &LocalTypo{
+		repo,
+		hs,
+	}
 }
 
-func (t *LocalTypo) Typo(cmd string) string {
+// Typo 返回修正的命令候选列表和原始命令
+// first return: original command
+// second return: candidate commands with scores
+func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 
-  fmt.Println(cmd)
-  return cmd
-}
+	command, err := t.hs.Scan()
+	if err != nil {
+		return "", nil, err
+	}
 
-type LlmTypo struct {
-}
+	// 获取命令的第一个词
+	oneCmd := strings.Split(command, " ")[0]
 
-func NewLlmTypo() ITypo {
-  return &LlmTypo{}
-}
+	commandNames, err := t.repo.GetAllCommandNames()
+	if err != nil {
+		return "", nil, err
+	}
 
-func (t *LlmTypo) Typo(cmd string) string {
+	matches := utils.MatchMultiple(oneCmd, commandNames, 5)
 
-  // todo: call llm api to get correct command
-  fmt.Println(cmd)
-  return cmd
+	if len(matches) > 0 && matches[0].Score < 0.5 {
+		_, err := t.repo.FindCommandByName(oneCmd)
+		if err == nil {
+			return command, nil, nil
+		}
+	}
+
+	// add command description
+	for i := range matches {
+		cmd, err := t.repo.FindCommandByName(matches[i].Command)
+		if err != nil {
+			matches[i].Desc = ""
+			continue
+		}
+		matches[i].Desc = cmd.Description
+	}
+
+	return command, matches, nil
 }
