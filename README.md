@@ -17,6 +17,9 @@ Github Repo：https://github.com/nvbn/thefuck
 
 不根据上下文推荐此时应该执行什么 command 其他功能。
 
+- 使用 typo 可以，修复上一条 typo 的错误命令；
+- 在忘记具体的命令时，可以模糊搜索并执行。
+
 ## 实现原理
 
 1. 命令修正：用莱文斯坦距离（Levenshtein distance）等算法计算相似度；
