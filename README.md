@@ -9,7 +9,8 @@ Github Repo：https://github.com/nvbn/thefuck
 1. 不继续维护了，Python 3.12+ 安装报错；
 2. 不支持自定义的 alias 配置；
 3. 多级命令时引号会丢失：https://github.com/nvbn/thefuck/issues/1543；
-4. 依赖 python 的运行库。
+4. 依赖 python 的运行库;
+5. thefuck 有时候可能返回错误的修复命令。
 
 ## Typo
 
