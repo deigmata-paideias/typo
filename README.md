@@ -27,6 +27,12 @@ Github Repo：https://github.com/nvbn/thefuck
 
 ## 二进制运行
 
+1. clone 仓库，git clone https://github.com/deigmata-paideias/typo；
+2. 编译，cd typo && make build
+3. 扫描 man 并存入数据库：./bin/darwin/arm64/typo scanner --type man；
+4. （无配置可跳过）扫描自定义 alias 并存入数据库：./bin/darwin/arm64/typo scanner --type man；
+5. 运行  ./bin/darwin/arm64/typo run。
+
 ![D7AEAA94-35B5-4D95-8ED5-E8AF6AAD0A55](https://github.com/user-attachments/assets/05edefff-544c-417b-8772-5e78640c109e)
 
 ## oh-my-zsh 集成
@@ -44,8 +50,4 @@ plugins=(... typo)
 
 最后执行 source ~/.zshrc，按两下 esc 执行 typo 命令。
 
-### zsh 集成效果演示
-
 ![FA5AB79E-A12C-4019-89C6-E9D02758E0E5](https://github.com/user-attachments/assets/73c3d354-8bb0-4ac9-bbe8-03f3635dba1a)
-
-
