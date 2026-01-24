@@ -25,6 +25,10 @@ Github Repo：https://github.com/nvbn/thefuck
    2. 用户自定义的 alias 配置；
 3. 用户选择以执行。
 
+## 二进制运行
+
+![D7AEAA94-35B5-4D95-8ED5-E8AF6AAD0A55](https://github.com/user-attachments/assets/05edefff-544c-417b-8772-5e78640c109e)
+
 ## oh-my-zsh 集成
 
 ```
@@ -40,6 +44,8 @@ plugins=(... typo)
 
 最后执行 source ~/.zshrc，按两下 esc 执行 typo 命令。
 
-### 效果演示
+### zsh 集成效果演示
+
+![FA5AB79E-A12C-4019-89C6-E9D02758E0E5](https://github.com/user-attachments/assets/73c3d354-8bb0-4ac9-bbe8-03f3635dba1a)
 
 
