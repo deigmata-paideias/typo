@@ -41,3 +41,32 @@ func MatchMultiple(str string, commands []string, limit int) []types.MatchResult
 
 	return results
 }
+
+// SortAndLimitResults sorts results by score and limits the number of results
+func SortAndLimitResults(results []types.MatchResult, limit int) []types.MatchResult {
+	if limit <= 0 {
+		limit = 5
+	}
+
+	// Sort by score in descending order
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Score > results[j].Score
+	})
+
+	// Remove duplicates based on command
+	seen := make(map[string]bool)
+	uniqueResults := make([]types.MatchResult, 0, len(results))
+	for _, result := range results {
+		if !seen[result.Command] {
+			seen[result.Command] = true
+			uniqueResults = append(uniqueResults, result)
+		}
+	}
+
+	// Limit the number of results
+	if len(uniqueResults) > limit {
+		uniqueResults = uniqueResults[:limit]
+	}
+
+	return uniqueResults
+}

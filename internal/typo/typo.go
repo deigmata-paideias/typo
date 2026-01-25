@@ -60,6 +60,8 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 	// Check main command first
 	mainMatches := utils.MatchMultiple(mainCmd, commandNames, 5)
 
+	var allResults []types.MatchResult
+
 	// If main command matches 100%, check subcommands
 	if len(mainMatches) > 0 && mainMatches[0].Score == 1.0 {
 		// Main command is correct, check if there are subcommands
@@ -125,6 +127,57 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 		return command, nil, nil
 	}
 
+	// Main command has spelling errors
+	// Strategy: Try to match both main command and subcommand (if exists) combinations
+	if len(parts) > 1 {
+		subCmd := parts[1]
+
+		// For each possible main command match, try to find subcommand matches
+		for _, mainMatch := range mainMatches {
+			if mainMatch.Score < 0.5 {
+				continue // Skip very low similarity matches
+			}
+
+			// Get subcommands for the matched main command
+			subCommandNames, err := t.repo.GetAllCommandOptionNames(mainMatch.Command)
+			if err == nil && len(subCommandNames) > 0 {
+				// Try to match the subcommand
+				subMatches := utils.MatchMultiple(subCmd, subCommandNames, 3)
+
+				for _, subMatch := range subMatches {
+					if subMatch.Score < 0.5 {
+						continue
+					}
+
+					// Calculate combined score (weighted average)
+					combinedScore := (mainMatch.Score * 0.6) + (subMatch.Score * 0.4)
+
+					// Build corrected command
+					newCommand := mainMatch.Command + " " + subMatch.Command
+					if len(parts) > 2 {
+						newCommand += " " + strings.Join(parts[2:], " ")
+					}
+
+					// Get description
+					subCommands, _ := t.repo.GetCommandOptions(mainMatch.Command)
+					desc := ""
+					for _, sc := range subCommands {
+						if sc.OptionName == subMatch.Command {
+							desc = sc.Description
+							break
+						}
+					}
+
+					allResults = append(allResults, types.MatchResult{
+						Command: newCommand,
+						Score:   combinedScore,
+						Desc:    desc,
+					})
+				}
+			}
+		}
+	}
+
 	// Main command might have spelling errors, return main command correction suggestions
 	if len(mainMatches) > 0 && mainMatches[0].Score < 0.5 {
 		_, err := t.repo.FindCommandByName(mainCmd)
@@ -141,6 +194,18 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 			continue
 		}
 		mainMatches[i].Desc = cmd.Description
+
+		// If there are parts after main command, append them to the suggestion
+		if len(parts) > 1 {
+			mainMatches[i].Command = mainMatches[i].Command + " " + strings.Join(parts[1:], " ")
+		}
+	}
+
+	// Combine results: prioritize combined matches, then main command matches
+	if len(allResults) > 0 {
+		allResults = append(allResults, mainMatches...)
+		// Sort by score and limit results
+		return command, utils.SortAndLimitResults(allResults, 5), nil
 	}
 
 	return command, mainMatches, nil
