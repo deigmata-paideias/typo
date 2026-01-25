@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/deigmata-paideias/typo/internal/scanner"
+	"github.com/deigmata-paideias/typo/internal/utils"
 )
 
 type History struct {
@@ -19,17 +20,15 @@ func NewHistory() scanner.IScanner {
 
 func (h *History) Scan() (string, error) {
 
-	shell := os.Getenv("SHELL")
 	homeDir := os.Getenv("HOME")
-	shellName := strings.Split(shell, "/")[len(strings.Split(shell, "/"))-1]
 
-	switch shellName {
+	switch utils.GetShell() {
 	case "bash":
 		return bash(homeDir)
 	case "zsh":
 		return zsh(homeDir)
 	default:
-		return "", fmt.Errorf("unsupported shell: %s", shell)
+		return "", fmt.Errorf("unsupported shell: %s", utils.GetShell())
 	}
 }
 

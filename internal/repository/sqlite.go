@@ -26,25 +26,29 @@ type Repository struct {
 	db *gorm.DB
 }
 
-// NewRepository 创建 Sqlite 数据库连接
+// NewRepository 创建 Sqlite 数据库连接，使用默认路径
 func NewRepository() IRepository {
-
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
 	}
 
-	configDir := filepath.Join(homeDir, ".config", "typo")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	dbPath := filepath.Join(homeDir, ".config", "typo", "typo.db")
+	return NewRepositoryWithPath(dbPath)
+}
+
+// NewRepositoryWithPath 创建 Sqlite 数据库连接
+func NewRepositoryWithPath(dbPath string) IRepository {
+
+	dbDir := filepath.Dir(dbPath)
+	if err := os.MkdirAll(dbDir, 0755); err != nil {
 		panic(err)
 	}
-
-	dsn := filepath.Join(configDir, "typo.db")
 
 	config := &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	}
-	db, err := newSqliteDB(dsn, config)
+	db, err := newSqliteDB(dbPath, config)
 	if err != nil {
 		panic(err)
 	}
@@ -147,8 +151,10 @@ func (r Repository) GetAllCommandNames() ([]string, error) {
 
 // GetCommandOptions 获取指定命令的所有选项/子命令
 func (r Repository) GetCommandOptions(commandName string) ([]types.CommandOption, error) {
-	var command types.Command
-	var options []types.CommandOption
+	var (
+		command types.Command
+		options []types.CommandOption
+	)
 
 	// 先找到对应的命令
 	err := r.db.Where("name = ?", commandName).First(&command).Error
@@ -163,8 +169,11 @@ func (r Repository) GetCommandOptions(commandName string) ([]types.CommandOption
 
 // GetAllCommandOptionNames 获取指定命令的所有选项/子命令名称
 func (r Repository) GetAllCommandOptionNames(commandName string) ([]string, error) {
-	var command types.Command
-	var names []string
+
+	var (
+		command types.Command
+		names   []string
+	)
 
 	// 先找到对应的命令
 	err := r.db.Where("name = ?", commandName).First(&command).Error

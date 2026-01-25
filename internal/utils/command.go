@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -71,4 +72,12 @@ func ExecPipeCommand(fullCmd string) (string, error) {
 	}
 
 	return output.String(), nil
+}
+
+func GetShell() string {
+
+	shell := os.Getenv("SHELL")
+	shellName := strings.Split(shell, "/")[len(strings.Split(shell, "/"))-1]
+
+	return shellName
 }

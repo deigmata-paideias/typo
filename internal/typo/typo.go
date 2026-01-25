@@ -149,22 +149,24 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 // LLM impl
 
 type LlmTypo struct {
-	hs  scanner.IScanner
-	llm openai.Client
+	hs    scanner.IScanner
+	llm   openai.Client
+	model string
 }
 
-var matchResultSchema = GenerateSchema[types.MatchResult]()
+var matchResultSchema = GenerateSchema[[]types.MatchResult]()
 
-func NewLlmTypo(hs scanner.IScanner) ITypo {
+func NewLlmTypo(hs scanner.IScanner, apiKey, baseURL, model string) ITypo {
 
 	client := openai.NewClient(
-		option.WithAPIKey("sk-1111"),
-		option.WithBaseURL("https://api.openai.com/v1"),
+		option.WithAPIKey(apiKey),
+		option.WithBaseURL(baseURL),
 	)
 
 	return &LlmTypo{
-		hs,
-		client,
+		hs:    hs,
+		llm:   client,
+		model: model,
 	}
 }
 
@@ -192,7 +194,7 @@ func (l LlmTypo) Typo() (string, []types.MatchResult, error) {
 			ResponseFormat: openai.ChatCompletionNewParamsResponseFormatUnion{
 				OfJSONSchema: &openai.ResponseFormatJSONSchemaParam{JSONSchema: schemaParam},
 			},
-			Model: "Qwen3-flash",
+			Model: l.model,
 		},
 	)
 	if err != nil {
@@ -205,6 +207,7 @@ func (l LlmTypo) Typo() (string, []types.MatchResult, error) {
 func returnCommand(cmd string, res *openai.ChatCompletion) (string, []types.MatchResult, error) {
 
 	var results []types.MatchResult
+	// debug: println(res.Choices[0].Message.Content)
 	err := json.Unmarshal([]byte(res.Choices[0].Message.Content), &results)
 	if err != nil {
 		return "", nil, err
@@ -311,7 +314,7 @@ output：
   `
 }
 
-func GenerateSchema[T any]() interface{} {
+func GenerateSchema[T any]() any {
 
 	// Structured Outputs uses a subset of JSON schema
 	// These flags are necessary to comply with the subset
@@ -323,4 +326,17 @@ func GenerateSchema[T any]() interface{} {
 	var v T
 	schema := reflector.Reflect(v)
 	return schema
+}
+
+// NewTypo 根据配置创建 Typo 实例
+func NewTypo(config *types.Config, hs scanner.IScanner, repo repository.IRepository) ITypo {
+
+	switch config.Mode {
+	case types.LLM:
+		return NewLlmTypo(hs, config.LLM.ApiKey, config.LLM.BaseUrl, config.LLM.Model)
+	case types.Local:
+		fallthrough
+	default:
+		return NewLocalTypo(repo, hs)
+	}
 }
