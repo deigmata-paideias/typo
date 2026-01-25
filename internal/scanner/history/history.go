@@ -39,8 +39,8 @@ func zsh(home string) (string, error) {
 	if file, err := os.Open(zshHistory); err == nil {
 		defer file.Close()
 
-		// 读取最后两行，zsh 的前一行是当前
-		// 命令运行的一行，后一行是上一条命令 ?
+		// Read the last two lines, the previous line in zsh is the current
+		// command execution line, the next line is the previous command ?
 		var lastCmd string
 		scanner := bufio.NewScanner(file)
 
@@ -48,7 +48,7 @@ func zsh(home string) (string, error) {
 			lastCmd = scanner.Text()
 		}
 
-		// zsh history 格式: ": timestamp:0;command"
+		// zsh history format: ": timestamp:0;command"
 		if strings.Contains(lastCmd, ";") {
 			//
 			parts := strings.SplitN(lastCmd, ";", 2)

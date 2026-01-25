@@ -6,7 +6,7 @@ import (
 	"github.com/deigmata-paideias/typo/internal/utils"
 )
 
-// GitAliasScanner 配置的 git 别名
+// GitAliasScanner scans configured git aliases
 type GitAliasScanner struct {
 	repo repository.IRepository
 }
@@ -27,8 +27,8 @@ func (g *GitAliasScanner) Scan() (string, error) {
 	}
 
 	if gitOutput == "" {
-		// 没有 git alias 配置
-		return "", nil 
+		// No git alias configuration found
+		return "", nil
 	}
 
 	commands, err := utils.Convert(gitOutput, "git")
@@ -36,7 +36,7 @@ func (g *GitAliasScanner) Scan() (string, error) {
 		return "", err
 	}
 
-	// 保存到数据库
+	// Save to database
 	if err := g.repo.BatchInsertCommand(commands); err != nil {
 		return "", err
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	
+
 	"github.com/deigmata-paideias/typo/internal/types"
 )
 
@@ -52,18 +52,18 @@ func NewModel(originalCmd string, matches []types.MatchResult) model {
 		}
 	}
 
-	// 不添加原始命令选项
+	// Don't add original command option
 
-	// 添加取消选
+	// Add cancel option
 	items = append(items, item{
 		MatchResult: types.MatchResult{
-			Command: "取消",
+			Command: "Cancel",
 			Score:   1000.0,
 		},
 	})
 
 	l := list.New(items, itemDelegate{}, 10, 12)
-	l.Title = fmt.Sprintf("检测到可能的拼写错误: %s", originalCmd)
+	l.Title = fmt.Sprintf("Detected possible spelling error: %s", originalCmd)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	l.Styles.Title = titleStyle
@@ -73,12 +73,12 @@ func NewModel(originalCmd string, matches []types.MatchResult) model {
 	return model{list: l}
 }
 
-// Init 实现 tea.Model 接口
+// Init implements tea.Model interface
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
-// Update 实现 tea.Model 接口
+// Update implements tea.Model interface
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -105,29 +105,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-// View 实现 tea.Model 接口
+// View implements tea.Model interface
 func (m model) View() string {
 	if m.choice != "" {
-		if m.choice == "取消" {
-			return quitTextStyle.Render("已取消操作")
+		if m.choice == "Cancel" {
+			return quitTextStyle.Render("Operation cancelled")
 		}
-		return quitTextStyle.Render(fmt.Sprintf("已选择: %s", m.choice))
+		return quitTextStyle.Render(fmt.Sprintf("Selected: %s", m.choice))
 	}
 
 	if m.quitting {
-		return quitTextStyle.Render("已取消操作")
+		return quitTextStyle.Render("Operation cancelled")
 	}
 
 	return m.list.View()
 }
 
-// GetChoice 返回用户的选择
+// GetChoice returns the user's choice
 func (m model) GetChoice() string {
 
 	return m.choice
 }
 
-// itemDelegate 是列表项的渲染器
+// itemDelegate is the list item renderer
 type itemDelegate struct{}
 
 func (d itemDelegate) Height() int { return 1 }
@@ -143,8 +143,8 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	}
 
 	var text string
-	if i.Command == "取消" {
-		text = "取消"
+	if i.Command == "Cancel" {
+		text = "Cancel"
 	} else {
 		text = fmt.Sprintf("%-12s %.1f%% %s", i.Command, i.Score*100, i.Desc)
 		if i.Desc != "" {
@@ -161,7 +161,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	w.Write([]byte(itemStyle.Render("  " + text)))
 }
 
-// RunSelector 运行选择器
+// RunSelector runs the selector
 func RunSelector(originalCmd string, matches []types.MatchResult) (string, error) {
 
 	if len(matches) == 0 {
@@ -178,7 +178,7 @@ func RunSelector(originalCmd string, matches []types.MatchResult) (string, error
 	if finalModel, ok := finalModel.(model); ok {
 
 		choice := finalModel.GetChoice()
-		if choice == "取消" || choice == "" {
+		if choice == "Cancel" || choice == "" {
 			return "", nil
 		}
 		return choice, nil

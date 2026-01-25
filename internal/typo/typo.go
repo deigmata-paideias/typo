@@ -16,7 +16,7 @@ import (
 )
 
 type ITypo interface {
-	// Typo 返回修正的命令候选列表和原始命令
+	// Typo returns the corrected command candidate list and original command
 	Typo() (string, []types.MatchResult, error)
 }
 
@@ -33,7 +33,7 @@ func NewLocalTypo(repo repository.IRepository, hs scanner.IScanner) ITypo {
 	}
 }
 
-// Typo 返回修正的命令候选列表和原始命令
+// Typo returns the corrected command candidate list and original command
 // first return: original command
 // second return: candidate commands with scores
 func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
@@ -43,13 +43,13 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 		return "", nil, err
 	}
 
-	// 分割命令
+	// Split command
 	parts := strings.Fields(command)
 	if len(parts) == 0 {
 		return command, nil, nil
 	}
 
-	// 获取命令的第一个单词（主命令）
+	// Get the first word of the command (main command)
 	mainCmd := parts[0]
 
 	commandNames, err := t.repo.GetAllCommandNames()
@@ -57,27 +57,27 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 		return "", nil, err
 	}
 
-	// 先检查主命令
+	// Check main command first
 	mainMatches := utils.MatchMultiple(mainCmd, commandNames, 5)
 
-	// 如果主命令匹配度为100%，检查子命令
+	// If main command matches 100%, check subcommands
 	if len(mainMatches) > 0 && mainMatches[0].Score == 1.0 {
-		// 主命令正确，检查是否有子命令
+		// Main command is correct, check if there are subcommands
 		if len(parts) > 1 {
 			subCmd := parts[1]
 
-			// 获取该主命令的所有子命令
+			// Get all subcommands for this main command
 			subCommandNames, err := t.repo.GetAllCommandOptionNames(mainCmd)
 			if err != nil {
-				// 如果没有子命令，返回原始命令
+				// If there are no subcommands, return the original command
 				return command, nil, nil
 			}
 
 			if len(subCommandNames) > 0 {
-				// 检查子命令的拼写
+				// Check subcommand spelling
 				subMatches := utils.MatchMultiple(subCmd, subCommandNames, 5)
 
-				// 检查是否完全匹配
+				// Check if there's an exact match
 				isExactMatch := false
 				for _, match := range subMatches {
 					if match.Command == subCmd && match.Score == 1.0 {
@@ -86,21 +86,21 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 					}
 				}
 
-				// 如果子命令完全匹配，不返回任何建议
+				// If subcommand matches exactly, don't return any suggestions
 				if isExactMatch {
 					return command, nil, nil
 				}
 
-				// 子命令不匹配或拼写错误，返回修正建议
+				// Subcommand doesn't match or has spelling errors, return correction suggestions
 				var results []types.MatchResult
 				for _, match := range subMatches {
-					// 构建新的命令：主命令 + 修正的子命令 + 剩余参数
+					// Build new command: main command + corrected subcommand + remaining arguments
 					newCommand := mainCmd + " " + match.Command
 					if len(parts) > 2 {
 						newCommand += " " + strings.Join(parts[2:], " ")
 					}
 
-					// 获取子命令描述
+					// Get subcommand description
 					subCommands, _ := t.repo.GetCommandOptions(mainCmd)
 					desc := ""
 					for _, sc := range subCommands {
@@ -125,7 +125,7 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 		return command, nil, nil
 	}
 
-	// 主命令可能有拼写错误，返回主命令的修正建议
+	// Main command might have spelling errors, return main command correction suggestions
 	if len(mainMatches) > 0 && mainMatches[0].Score < 0.5 {
 		_, err := t.repo.FindCommandByName(mainCmd)
 		if err == nil {
@@ -133,7 +133,7 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 		}
 	}
 
-	// 为主命令匹配结果添加描述
+	// Add descriptions for main command match results
 	for i := range mainMatches {
 		cmd, err := t.repo.FindCommandByName(mainMatches[i].Command)
 		if err != nil {
@@ -252,27 +252,27 @@ output：
   {
     "command": "git status",
     "score": 0.9,
-    "desc": "查看当前仓库状态"
+    "desc": "Check current repository status"
   },
   {
     "command": "git stash",
     "score": 0.8,
-    "desc": "暂存当前工作区状态"
+    "desc": "Stash current working directory state"
   },
   {
     "command": "git stash list",
     "score": 0.7,
-    "desc": "查看暂存列表"
+    "desc": "View stash list"
   },
   {
     "command": "git stash apply",
     "score": 0.6,
-    "desc": "应用暂存的工作区状态"
+    "desc": "Apply stashed working directory state"
   },
   {
     "command": "git stash drop",
     "score": 0.5,
-    "desc": "删除暂存的工作区状态"
+    "desc": "Delete stashed working directory state"
   }
 ]
 
@@ -288,27 +288,27 @@ output：
   {
     "command": "git branch",
     "score": 0.9,
-    "desc": "查看本地分支"
+    "desc": "View local branches"
   },
   {
     "command": "git checkout",
     "score": 0.8,
-    "desc": "切换到指定分支"
+    "desc": "Switch to specified branch"
   },
   {
     "command": "git branch -d",
     "score": 0.7,
-    "desc": "删除本地分支"
+    "desc": "Delete local branch"
   },
   {
     "command": "git branch -D",
     "score": 0.6,
-    "desc": "强制删除本地分支"
+    "desc": "Force delete local branch"
   },
   {
     "command": "git branch -m",
     "score": 0.5,
-    "desc": "重命名本地分支"
+    "desc": "Rename local branch"
   }
 ]
   `
@@ -328,7 +328,7 @@ func GenerateSchema[T any]() any {
 	return schema
 }
 
-// NewTypo 根据配置创建 Typo 实例
+// NewTypo creates a Typo instance based on configuration
 func NewTypo(config *types.Config, hs scanner.IScanner, repo repository.IRepository) ITypo {
 
 	switch config.Mode {

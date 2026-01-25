@@ -11,12 +11,12 @@ import (
 	"github.com/deigmata-paideias/typo/internal/types"
 )
 
-// DefaultConfig 返回默认配置
+// DefaultConfig returns the default configuration
 func DefaultConfig() *types.Config {
 
 	homeDir, _ := os.UserHomeDir()
 
-  // ~/.config/typo/typo.db
+	// ~/.config/typo/typo.db
 	defaultDBPath := filepath.Join(homeDir, ".config", "typo", "typo.db")
 
 	return &types.Config{
@@ -38,42 +38,42 @@ func DefaultConfig() *types.Config {
 	}
 }
 
-// LoadConfig 加载配置文件
+// LoadConfig loads the configuration file
 func LoadConfig() (*types.Config, error) {
 
-	// 先获取默认配置
+	// Get default configuration first
 	config := DefaultConfig()
 
-	// 查找配置文件路径
+	// Find configuration file path
 	configPath, err := findConfigFile()
 	if err != nil {
-		// 如果找不到配置文件，使用默认配置
+		// If configuration file not found, use default configuration
 		return config, nil
 	}
 
-	// 读取配置文件
+	// Read configuration file
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("read config file failed: %w", err)
 	}
 
-	// 解析 YAML
+	// Parse YAML
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, fmt.Errorf("parse config file failed: %w", err)
 	}
 
-	// 展开路径中的 ~
+	// Expand ~ in path
 	config.Local.DBPath = expandPath(config.Local.DBPath)
 
 	return config, nil
 }
 
-// findConfigFile 查找配置文件
-// 优先级：当前目录 > ~/.config/typo/typo.config.yaml > /etc/typo/typo.config.yaml
+// findConfigFile finds the configuration file
+// Priority: current directory > ~/.config/typo/typo.config.yaml > /etc/typo/typo.config.yaml
 func findConfigFile() (string, error) {
 	homeDir, _ := os.UserHomeDir()
 
-	// 可能的配置文件路径
+	// Possible configuration file paths
 	paths := []string{
 		"typo.config.yaml",
 		".typo.config.yaml",
@@ -92,10 +92,10 @@ func findConfigFile() (string, error) {
 
 func expandPath(path string) string {
 
-  if strings.HasPrefix(path, "~/") {
+	if strings.HasPrefix(path, "~/") {
 		homeDir, _ := os.UserHomeDir()
 		return filepath.Join(homeDir, path[2:])
 	}
 
-  return path
+	return path
 }

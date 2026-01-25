@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// ExecCommand 常规 cmd 处理 ("git", "config", "--list")
+// ExecCommand handles regular cmd processing ("git", "config", "--list")
 func ExecCommand(cmd string, args ...string) (string, error) {
 
 	output, err := exec.Command(cmd, args...).CombinedOutput()
@@ -19,7 +19,7 @@ func ExecCommand(cmd string, args ...string) (string, error) {
 	return string(output), nil
 }
 
-// ExecPipeCommand 支持管道命令 ExecPipeCommand("git config --list | grep alias")
+// ExecPipeCommand supports pipe commands ExecPipeCommand("git config --list | grep alias")
 func ExecPipeCommand(fullCmd string) (string, error) {
 
 	parts := strings.Split(fullCmd, "|")

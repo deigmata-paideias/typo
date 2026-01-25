@@ -7,7 +7,7 @@ import (
 	"github.com/deigmata-paideias/typo/internal/types"
 )
 
-// 检查命令是否存在于系统中
+// Check if command exists in the system
 // c onefetch alias
 // which c --> c: aliased to onefetch
 // command -v c --> alias c=onefetch
@@ -58,7 +58,7 @@ func Convert(val, source string) ([]types.Command, error) {
 				continue
 			}
 
-			// 处理格式：alias.br=branch
+			// Handle format: alias.br=branch
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) != 2 {
 				continue
@@ -71,7 +71,7 @@ func Convert(val, source string) ([]types.Command, error) {
 				continue
 			}
 
-			// 提取alias名称，去掉"alias."前缀
+			// Extract alias name, remove "alias." prefix
 			if !strings.HasPrefix(aliasKey, "alias.") {
 				continue
 			}
@@ -94,27 +94,27 @@ func Convert(val, source string) ([]types.Command, error) {
 				continue
 			}
 
-			// 查找第一个 - 作为分隔符
+			// Find the first - as separator
 			dashIndex := strings.Index(line, " - ")
 			if dashIndex == -1 {
 				continue
 			}
 
-			// 提取命令名部分
+			// Extract command name part
 			cmdPart := strings.TrimSpace(line[:dashIndex])
 			description := strings.TrimSpace(line[dashIndex+3:])
 
-			// 分割多个命令名
+			// Split multiple command names
 			cmdNames := strings.Split(cmdPart, ", ")
 			for _, rawCmd := range cmdNames {
 				rawCmd = strings.TrimSpace(rawCmd)
 
-				// 只处理 section 1 的命令
+				// Only process section 1 commands
 				if !strings.HasSuffix(rawCmd, "(1)") {
 					continue
 				}
 
-				// 移除 (1) 后缀
+				// Remove (1) suffix
 				cmdName := strings.TrimSuffix(rawCmd, "(1)")
 				if cmdName == "" {
 					continue
@@ -127,21 +127,21 @@ func Convert(val, source string) ([]types.Command, error) {
 					Description: description,
 				}
 
-				// 检查命令是否实际存在
+				// Check if command actually exists
 				if commandExists(cmdName) {
 					commands = append(commands, command)
 				}
 
-				// 处理子命令，格式为：命令-子命令，git-branch, curl-config 等
+				// Handle subcommands, format: command-subcommand, git-branch, curl-config etc.
 				if strings.Contains(cmdName, "-") {
 					parts := strings.SplitN(cmdName, "-", 2)
 					if len(parts) == 2 {
 						mainCmd := parts[0]
 						subCmd := parts[1]
 						if mainCmd != "" && subCmd != "" {
-							// 标记为子命令，后续会处理
+							// Mark as subcommand, will be processed later
 							commands = append(commands, types.Command{
-								Name:        cmdName, // 完整名称
+								Name:        cmdName, // Full name
 								Type:        string(types.Man),
 								Source:      "man-subcommand",
 								Description: description,

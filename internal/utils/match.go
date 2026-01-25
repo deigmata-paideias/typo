@@ -7,13 +7,13 @@ import (
 	"github.com/deigmata-paideias/typo/internal/types"
 )
 
-// Match 返回最佳匹配命令
+// Match returns the best matching command
 func Match(str string, commands []string) string {
 	bestMatchOne := strsim.FindBestMatch(str, commands)
 	return commands[bestMatchOne.BestIndex]
 }
 
-// MatchMultiple 返回多个相似命令，按相似度排序
+// MatchMultiple returns multiple similar commands, sorted by similarity
 func MatchMultiple(str string, commands []string, limit int) []types.MatchResult {
 	if limit <= 0 {
 		limit = 5
@@ -29,12 +29,12 @@ func MatchMultiple(str string, commands []string, limit int) []types.MatchResult
 		})
 	}
 
-	// 按分数降序排序
+	// Sort by score in descending order
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Score > results[j].Score
 	})
 
-	// 限制返回数量
+	// Limit the number of results returned
 	if len(results) > limit {
 		results = results[:limit]
 	}

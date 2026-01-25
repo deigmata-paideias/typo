@@ -40,7 +40,7 @@ func (a *AliasScanner) Scan() (string, error) {
 		return "", err
 	}
 
-	// 保存到数据库
+	// Save to database
 	if err := a.repo.BatchInsertCommand(commands); err != nil {
 		return "", err
 	}
@@ -82,7 +82,7 @@ func (m *ManScanner) Scan() (string, error) {
 		return "", err
 	}
 
-	// 分离普通命令和子命令
+	// Separate normal commands and subcommands
 	var normalCommands []types.Command
 	var subCommands []types.Command
 
@@ -94,12 +94,12 @@ func (m *ManScanner) Scan() (string, error) {
 		}
 	}
 
-	// 保存普通命令到数据库
+	// Save normal commands to database
 	if err := m.repo.BatchInsertCommand(normalCommands); err != nil {
 		return "", err
 	}
 
-	// 处理子命令
+	// Process subcommands
 	if err := m.processSubCommands(subCommands); err != nil {
 		return "", err
 	}
@@ -107,12 +107,12 @@ func (m *ManScanner) Scan() (string, error) {
 	return "", nil
 }
 
-// processSubCommands 通用处理所有子命令
+// processSubCommands handles all subcommands generically
 func (m *ManScanner) processSubCommands(commands []types.Command) error {
-	// 按主命令分组处理子命令
+	// Group subcommands by main command
 	subCommandsByMain := make(map[string][]types.CommandOption)
 
-	// 收集所有子命令
+	// Collect all subcommands
 	for _, cmd := range commands {
 		if cmd.Source == "man-subcommand" && strings.Contains(cmd.Name, "-") {
 			parts := strings.SplitN(cmd.Name, "-", 2)
@@ -129,12 +129,12 @@ func (m *ManScanner) processSubCommands(commands []types.Command) error {
 		}
 	}
 
-	// 处理每个主命令的子命令
+	// Process subcommands for each main command
 	for mainCmd, subCommands := range subCommandsByMain {
-		// 查找主命令
+		// Find the main command
 		mainCommand, err := m.repo.FindCommandByName(mainCmd)
 		if err != nil {
-			// 如果主命令不存在，创建一个
+			// If the main command doesn't exist, create one
 			newMainCommand := types.Command{
 				Name:        mainCmd,
 				Type:        string(types.Man),
@@ -142,12 +142,12 @@ func (m *ManScanner) processSubCommands(commands []types.Command) error {
 				Description: "Command with subcommands",
 			}
 			if err := m.repo.BatchInsertCommand([]types.Command{newMainCommand}); err != nil {
-				continue // 跳过错误，继续处理其他命令
+				continue // Skip errors, continue processing other commands
 			}
 			mainCommand, _ = m.repo.FindCommandByName(mainCmd)
 		}
 
-		// 为每个子命令设置CommandID并插入
+		// Set CommandID for each subcommand and insert
 		var optionsWithID []types.CommandOption
 		for _, subCmd := range subCommands {
 			subCmd.CommandID = mainCommand.ID
