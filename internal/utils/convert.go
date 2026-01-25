@@ -109,13 +109,23 @@ func Convert(val, source string) ([]types.Command, error) {
 			for _, rawCmd := range cmdNames {
 				rawCmd = strings.TrimSpace(rawCmd)
 
-				// Only process section 1 commands
-				if !strings.HasSuffix(rawCmd, "(1)") {
+				// user 1 system 8
+				// Extract section number (1), (8), etc.
+				openParen := strings.LastIndex(rawCmd, "(")
+				closeParen := strings.LastIndex(rawCmd, ")")
+				if openParen == -1 || closeParen == -1 || closeParen != len(rawCmd)-1 {
 					continue
 				}
 
-				// Remove (1) suffix
-				cmdName := strings.TrimSuffix(rawCmd, "(1)")
+				section := rawCmd[openParen+1 : closeParen]
+				cmdName := strings.TrimSpace(rawCmd[:openParen])
+
+				// Process common sections: 1 (user commands), 8 (system admin commands)
+				// Skip other sections like 2,3 (system calls, library functions), 5 (file formats)
+				if section != "1" && section != "8" {
+					continue
+				}
+
 				if cmdName == "" {
 					continue
 				}

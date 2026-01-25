@@ -230,17 +230,29 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 		}
 	}
 
-	// Add descriptions for main command match results
-	for i := range mainMatches {
-		cmd, err := t.repo.FindCommandByName(mainMatches[i].Command)
-		if err != nil {
-			mainMatches[i].Desc = ""
-			continue
+	// Add descriptions for main command match results and rebuild full command with arguments
+	var results []types.MatchResult
+	for _, match := range mainMatches {
+		// Build new command: corrected main command + remaining arguments
+		newCommand := match.Command
+		if len(parts) > 1 {
+			newCommand += " " + strings.Join(parts[1:], " ")
 		}
-		mainMatches[i].Desc = cmd.Description
+
+		cmd, err := t.repo.FindCommandByName(match.Command)
+		desc := ""
+		if err == nil {
+			desc = cmd.Description
+		}
+
+		results = append(results, types.MatchResult{
+			Command: newCommand,
+			Score:   match.Score,
+			Desc:    desc,
+		})
 	}
 
-	return command, mainMatches, nil
+	return command, deduplicateResults(results), nil
 }
 
 // LLM impl
