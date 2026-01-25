@@ -18,6 +18,8 @@ type IRepository interface {
 	GetAllCommands() ([]types.Command, error)
 	FindCommandByName(name string) (*types.Command, error)
 	GetAllCommandNames() ([]string, error)
+	GetCommandOptions(commandName string) ([]types.CommandOption, error)
+	GetAllCommandOptionNames(commandName string) ([]string, error)
 }
 
 type Repository struct {
@@ -140,5 +142,39 @@ func (r Repository) GetAllCommandNames() ([]string, error) {
 
 	err := r.db.Model(&types.Command{}).Pluck("name", &names).Error
 
+	return names, err
+}
+
+// GetCommandOptions 获取指定命令的所有选项/子命令
+func (r Repository) GetCommandOptions(commandName string) ([]types.CommandOption, error) {
+	var command types.Command
+	var options []types.CommandOption
+
+	// 先找到对应的命令
+	err := r.db.Where("name = ?", commandName).First(&command).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取该命令的所有选项
+	err = r.db.Where("command_id = ?", command.ID).Find(&options).Error
+	return options, err
+}
+
+// GetAllCommandOptionNames 获取指定命令的所有选项/子命令名称
+func (r Repository) GetAllCommandOptionNames(commandName string) ([]string, error) {
+	var command types.Command
+	var names []string
+
+	// 先找到对应的命令
+	err := r.db.Where("name = ?", commandName).First(&command).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取该命令的所有选项名称
+	err = r.db.Model(&types.CommandOption{}).
+		Where("command_id = ?", command.ID).
+		Pluck("option_name", &names).Error
 	return names, err
 }

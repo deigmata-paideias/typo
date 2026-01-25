@@ -45,7 +45,7 @@ Github Repo：https://github.com/nvbn/thefuck
 
 ```
 mkdir -p ~/.oh-my-zsh/custom/plugins/typo
-cp ~/project/indi/typo/zsh/typo.plugin.zsh ~/.oh-my-zsh/custom/plugins/typo/typo.plugin.zsh
+cp zsh/typo.plugin.zsh ~/.oh-my-zsh/custom/plugins/typo/typo.plugin.zsh
 ```
 
 然后在 ~/.zshrc 中添加 typo 插件：

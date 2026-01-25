@@ -42,21 +42,20 @@ func zsh(home string) (string, error) {
 
 		// 读取最后两行，zsh 的前一行是当前
 		// 命令运行的一行，后一行是上一条命令 ?
-		var prevCmd, lastCmd string
+		var lastCmd string
 		scanner := bufio.NewScanner(file)
 
 		for scanner.Scan() {
-			prevCmd = lastCmd
 			lastCmd = scanner.Text()
 		}
 
 		// zsh history 格式: ": timestamp:0;command"
-		if strings.Contains(prevCmd, ";") {
+		if strings.Contains(lastCmd, ";") {
 			//
-			parts := strings.SplitN(prevCmd, ";", 2)
+			parts := strings.SplitN(lastCmd, ";", 2)
 			return parts[len(parts)-1], nil
 		}
-		return prevCmd, nil
+		return lastCmd, nil
 	}
 
 	return "", fmt.Errorf("failed to open zsh history file: %s", zshHistory)
@@ -68,14 +67,13 @@ func bash(home string) (string, error) {
 	if file, err := os.Open(bashHistory); err == nil {
 		defer file.Close()
 
-		var prevCmd, lastCmd string
+		var lastCmd string
 		scanner := bufio.NewScanner(file)
 
 		for scanner.Scan() {
-			prevCmd = lastCmd
 			lastCmd = scanner.Text()
 		}
-		return prevCmd, nil
+		return lastCmd, nil
 	}
 
 	return "", fmt.Errorf("failed to open bash history file: %s", bashHistory)

@@ -9,6 +9,25 @@ const (
 	Man   CommandType = "man"
 )
 
+type ModeType string
+
+const (
+	Local ModeType = "local"
+	LLM   ModeType = "llm"
+)
+
+type Config struct {
+	Mode ModeType `yaml:"mode"`
+	LLM  struct {
+		Model   string `yaml:"model"`
+		ApiKey  string `yaml:"api_key"`
+		BaseUrl string `yaml:"base_url"`
+	} `yaml:"llm"`
+	Local struct {
+		DBPath string `yaml:"db_path"`
+	} `yaml:"local"`
+}
+
 // MatchResult 表示匹配结果
 type MatchResult struct {
 	Command string

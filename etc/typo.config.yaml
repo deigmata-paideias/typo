@@ -1,0 +1,10 @@
+mode: local
+local:
+  db_path: ~/.config/typo/typo.db
+
+# by openai go sdk
+# mode: llm
+# llm:
+#   api_key: sk-123
+#   base_url: https://api.openai.com/v1
+#   model: qwen3-flash

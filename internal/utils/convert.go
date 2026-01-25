@@ -58,8 +58,7 @@ func Convert(val, source string) ([]types.Command, error) {
 				continue
 			}
 
-			// 处理格式：
-			// alias.br=branch
+			// 处理格式：alias.br=branch
 			parts := strings.SplitN(line, "=", 2)
 			if len(parts) != 2 {
 				continue
@@ -72,7 +71,7 @@ func Convert(val, source string) ([]types.Command, error) {
 				continue
 			}
 
-			// 提取 alias 名称，去掉 "alias." 前缀
+			// 提取alias名称，去掉"alias."前缀
 			if !strings.HasPrefix(aliasKey, "alias.") {
 				continue
 			}
@@ -115,7 +114,7 @@ func Convert(val, source string) ([]types.Command, error) {
 					continue
 				}
 
-				// 移除 man 里的 (1) 后缀
+				// 移除 (1) 后缀
 				cmdName := strings.TrimSuffix(rawCmd, "(1)")
 				if cmdName == "" {
 					continue
@@ -128,9 +127,27 @@ func Convert(val, source string) ([]types.Command, error) {
 					Description: description,
 				}
 
-				// 检查下
+				// 检查命令是否实际存在
 				if commandExists(cmdName) {
 					commands = append(commands, command)
+				}
+
+				// 处理子命令，格式为：命令-子命令，git-branch, curl-config 等
+				if strings.Contains(cmdName, "-") {
+					parts := strings.SplitN(cmdName, "-", 2)
+					if len(parts) == 2 {
+						mainCmd := parts[0]
+						subCmd := parts[1]
+						if mainCmd != "" && subCmd != "" {
+							// 标记为子命令，后续会处理
+							commands = append(commands, types.Command{
+								Name:        cmdName, // 完整名称
+								Type:        string(types.Man),
+								Source:      "man-subcommand",
+								Description: description,
+							})
+						}
+					}
 				}
 			}
 		}
