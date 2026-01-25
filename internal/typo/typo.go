@@ -129,12 +129,14 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 
 	// Main command has spelling errors
 	// Strategy: Try to match both main command and subcommand (if exists) combinations
-	if len(parts) > 1 {
+	hasSubcommand := len(parts) > 1
+	
+	if hasSubcommand {
 		subCmd := parts[1]
 
 		// For each possible main command match, try to find subcommand matches
 		for _, mainMatch := range mainMatches {
-			if mainMatch.Score < 0.5 {
+			if mainMatch.Score < 0.3 {
 				continue // Skip very low similarity matches
 			}
 
@@ -142,15 +144,24 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 			subCommandNames, err := t.repo.GetAllCommandOptionNames(mainMatch.Command)
 			if err == nil && len(subCommandNames) > 0 {
 				// Try to match the subcommand
-				subMatches := utils.MatchMultiple(subCmd, subCommandNames, 3)
+				subMatches := utils.MatchMultiple(subCmd, subCommandNames, 5)
 
 				for _, subMatch := range subMatches {
-					if subMatch.Score < 0.5 {
+					if subMatch.Score < 0.3 {
 						continue
 					}
 
-					// Calculate combined score (weighted average)
-					combinedScore := (mainMatch.Score * 0.6) + (subMatch.Score * 0.4)
+					// Calculate combined score using multiplication
+					// This ensures both parts need good matches
+					combinedScore := mainMatch.Score * subMatch.Score
+					
+					// Boost score for high-quality matches on both parts
+					if mainMatch.Score >= 0.7 && subMatch.Score >= 0.7 {
+						combinedScore = combinedScore * 1.3
+						if combinedScore > 1.0 {
+							combinedScore = 1.0
+						}
+					}
 
 					// Build corrected command
 					newCommand := mainMatch.Command + " " + subMatch.Command
@@ -166,6 +177,9 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 							desc = sc.Description
 							break
 						}
+					}
+					if desc == "" {
+						desc = mainMatch.Desc
 					}
 
 					allResults = append(allResults, types.MatchResult{
@@ -195,15 +209,36 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 		}
 		mainMatches[i].Desc = cmd.Description
 
-		// If there are parts after main command, append them to the suggestion
-		if len(parts) > 1 {
+		// Only append subcommand/args if:
+		// 1. No subcommand exists, OR
+		// 2. We have subcommand but no combined results (meaning subcommand matching failed)
+		if !hasSubcommand {
+			// No subcommand, safe to append any remaining parts
+			if len(parts) > 1 {
+				mainMatches[i].Command = mainMatches[i].Command + " " + strings.Join(parts[1:], " ")
+			}
+		} else if len(allResults) == 0 {
+			// Has subcommand but no combined matches found, append original parts
 			mainMatches[i].Command = mainMatches[i].Command + " " + strings.Join(parts[1:], " ")
 		}
+		// Otherwise: has subcommand AND combined results exist, don't append to avoid "brew instal 12344"
 	}
 
 	// Combine results: prioritize combined matches, then main command matches
 	if len(allResults) > 0 {
-		allResults = append(allResults, mainMatches...)
+		// Only add main command matches that don't have subcommands
+		// This prevents "brew" from appearing when we have "brew install"
+		for _, mainMatch := range mainMatches {
+			// Only add if the main match doesn't have subcommand parts
+			if !strings.Contains(mainMatch.Command, " ") {
+				// Get fresh description
+				cmd, err := t.repo.FindCommandByName(mainMatch.Command)
+				if err == nil {
+					mainMatch.Desc = cmd.Description
+				}
+				allResults = append(allResults, mainMatch)
+			}
+		}
 		// Sort by score and limit results
 		return command, utils.SortAndLimitResults(allResults, 5), nil
 	}
