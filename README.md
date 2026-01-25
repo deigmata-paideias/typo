@@ -56,4 +56,5 @@ plugins=(... typo)
 
 最后执行 source ~/.zshrc，按两下 esc 执行 typo 命令。
 
-![FA5AB79E-A12C-4019-89C6-E9D02758E0E5](https://github.com/user-attachments/assets/73c3d354-8bb0-4ac9-bbe8-03f3635dba1a)
+![AB5E9F0B-9BED-4E30-A3A7-57BD35E05C4E](https://github.com/user-attachments/assets/70ea54c7-5f4c-43a0-a138-8b9cb16dcc6b)
+
