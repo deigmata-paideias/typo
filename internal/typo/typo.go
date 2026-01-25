@@ -3,6 +3,7 @@ package typo
 import (
 	"context"
 	"encoding/json"
+	"sort"
 	"strings"
 
 	"github.com/invopop/jsonschema"
@@ -18,6 +19,35 @@ import (
 type ITypo interface {
 	// Typo returns the corrected command candidate list and original command
 	Typo() (string, []types.MatchResult, error)
+}
+
+// deduplicateResults removes duplicate commands, keeping the one with highest score
+func deduplicateResults(results []types.MatchResult) []types.MatchResult {
+	seen := make(map[string]types.MatchResult)
+
+	for _, result := range results {
+		if existing, found := seen[result.Command]; found {
+			// Keep the one with higher score
+			if result.Score > existing.Score {
+				seen[result.Command] = result
+			}
+		} else {
+			seen[result.Command] = result
+		}
+	}
+
+	// Convert map back to slice
+	deduplicated := make([]types.MatchResult, 0, len(seen))
+	for _, result := range seen {
+		deduplicated = append(deduplicated, result)
+	}
+
+	// Sort by score in descending order
+	sort.Slice(deduplicated, func(i, j int) bool {
+		return deduplicated[i].Score > deduplicated[j].Score
+	})
+
+	return deduplicated
 }
 
 type LocalTypo struct {
@@ -120,7 +150,7 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 				}
 
 				if len(results) > 0 {
-					return command, results, nil
+					return command, deduplicateResults(results), nil
 				}
 			}
 		}
@@ -130,7 +160,7 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 	// Main command has spelling errors
 	// Strategy: Try to match both main command and subcommand (if exists) combinations
 	hasSubcommand := len(parts) > 1
-	
+
 	if hasSubcommand {
 		subCmd := parts[1]
 
@@ -154,7 +184,7 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 					// Calculate combined score using multiplication
 					// This ensures both parts need good matches
 					combinedScore := mainMatch.Score * subMatch.Score
-					
+
 					// Boost score for high-quality matches on both parts
 					if mainMatch.Score >= 0.7 && subMatch.Score >= 0.7 {
 						combinedScore = combinedScore * 1.3
@@ -208,39 +238,6 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 			continue
 		}
 		mainMatches[i].Desc = cmd.Description
-
-		// Only append subcommand/args if:
-		// 1. No subcommand exists, OR
-		// 2. We have subcommand but no combined results (meaning subcommand matching failed)
-		if !hasSubcommand {
-			// No subcommand, safe to append any remaining parts
-			if len(parts) > 1 {
-				mainMatches[i].Command = mainMatches[i].Command + " " + strings.Join(parts[1:], " ")
-			}
-		} else if len(allResults) == 0 {
-			// Has subcommand but no combined matches found, append original parts
-			mainMatches[i].Command = mainMatches[i].Command + " " + strings.Join(parts[1:], " ")
-		}
-		// Otherwise: has subcommand AND combined results exist, don't append to avoid "brew instal 12344"
-	}
-
-	// Combine results: prioritize combined matches, then main command matches
-	if len(allResults) > 0 {
-		// Only add main command matches that don't have subcommands
-		// This prevents "brew" from appearing when we have "brew install"
-		for _, mainMatch := range mainMatches {
-			// Only add if the main match doesn't have subcommand parts
-			if !strings.Contains(mainMatch.Command, " ") {
-				// Get fresh description
-				cmd, err := t.repo.FindCommandByName(mainMatch.Command)
-				if err == nil {
-					mainMatch.Desc = cmd.Description
-				}
-				allResults = append(allResults, mainMatch)
-			}
-		}
-		// Sort by score and limit results
-		return command, utils.SortAndLimitResults(allResults, 5), nil
 	}
 
 	return command, mainMatches, nil

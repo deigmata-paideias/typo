@@ -20,13 +20,31 @@ func MatchMultiple(str string, commands []string, limit int) []types.MatchResult
 	}
 
 	matches := strsim.FindBestMatch(str, commands)
-	results := make([]types.MatchResult, 0, len(matches.AllResult))
+
+	// Use map to deduplicate and keep highest score for each command
+	uniqueResults := make(map[string]types.MatchResult)
 
 	for _, rating := range matches.AllResult {
-		results = append(results, types.MatchResult{
-			Command: rating.S,
-			Score:   rating.Score,
-		})
+		if existing, found := uniqueResults[rating.S]; found {
+			// Keep the one with higher score
+			if rating.Score > existing.Score {
+				uniqueResults[rating.S] = types.MatchResult{
+					Command: rating.S,
+					Score:   rating.Score,
+				}
+			}
+		} else {
+			uniqueResults[rating.S] = types.MatchResult{
+				Command: rating.S,
+				Score:   rating.Score,
+			}
+		}
+	}
+
+	// Convert map to slice
+	results := make([]types.MatchResult, 0, len(uniqueResults))
+	for _, result := range uniqueResults {
+		results = append(results, result)
 	}
 
 	// Sort by score in descending order
