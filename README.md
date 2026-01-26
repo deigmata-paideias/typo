@@ -43,6 +43,8 @@ Github Repo：https://github.com/nvbn/thefuck
 
 ## oh-my-zsh 集成
 
+> 目前处在 dev 阶段，需要手动修改下 zsh 插件的 bin 目录配置！
+
 ```
 mkdir -p ~/.oh-my-zsh/custom/plugins/typo
 cp zsh/typo.plugin.zsh ~/.oh-my-zsh/custom/plugins/typo/typo.plugin.zsh
