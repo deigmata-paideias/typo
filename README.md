@@ -60,3 +60,7 @@ plugins=(... typo)
 
 ![AB5E9F0B-9BED-4E30-A3A7-57BD35E05C4E](https://github.com/user-attachments/assets/70ea54c7-5f4c-43a0-a138-8b9cb16dcc6b)
 
+## LLM 集成
+
+参考 etc 目录下的配置文件格式，将此配置复制到 ~/.config/typo 目录下即可。
+
