@@ -62,5 +62,6 @@ plugins=(... typo)
 
 ## LLM 集成
 
-参考 etc 目录下的配置文件格式，将此配置复制到 ~/.config/typo 目录下即可。
+> LLM 集成会比 local 模式慢一点。复制 etc 下的 配置文件到 ~/.config/typo 目录下就行。
 
+参考 etc 目录下的配置文件格式，将此配置复制到 ~/.config/typo 目录下即可。
