@@ -3,8 +3,10 @@ package typo
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/invopop/jsonschema"
 	"github.com/openai/openai-go/v3"
@@ -13,6 +15,7 @@ import (
 	"github.com/deigmata-paideias/typo/internal/repository"
 	"github.com/deigmata-paideias/typo/internal/scanner"
 	"github.com/deigmata-paideias/typo/internal/types"
+	"github.com/deigmata-paideias/typo/internal/typo/rules"
 	"github.com/deigmata-paideias/typo/internal/utils"
 )
 
@@ -51,15 +54,182 @@ func deduplicateResults(results []types.MatchResult) []types.MatchResult {
 }
 
 type LocalTypo struct {
-	repo repository.IRepository
-	hs   scanner.IScanner
+	repo  repository.IRepository
+	hs    scanner.IScanner
+	rules []rules.Rule
 }
 
 func NewLocalTypo(repo repository.IRepository, hs scanner.IScanner) ITypo {
-
+	// Initialize standard rules
+	r := []rules.Rule{
+		&rules.GitPushRule{},
+		&rules.GitCheckoutRule{},
+		&rules.GitBranchExistsRule{},
+		&rules.GitAddRule{},
+		&rules.MkdirPRule{},
+		&rules.CpOmittingDirectoryRule{},
+		&rules.RmDirRule{},
+		&rules.CdMkdirRule{},
+		&rules.CdParentRule{},
+		&rules.ChmodXRule{},
+		&rules.BrewUnknownCommandRule{},
+		&rules.DockerUnknownCommandRule{},
+		&rules.GrepArgumentsOrderRule{},
+		&rules.SudoRule{},
+		&rules.SedUnterminatedSRule{},
+		&rules.LsAllRule{},
+		&rules.CatDirRule{},
+		&rules.SlLsRule{},
+		&rules.TouchRule{},
+		&rules.GoRunRule{},
+		&rules.ManNoSpaceRule{},
+		&rules.PythonCommandRule{},
+		&rules.GitDiffNoIndexRule{},
+		&rules.GoUnknownCommandRule{},
+		&rules.ADBUnknownCommandRule{},
+		&rules.AgLiteralRule{},
+		&rules.AptGetSearchRule{},
+		&rules.AptListUpgradableRule{},
+		&rules.AptUpgradeRule{},
+		&rules.AptInvalidOperationRule{},
+		&rules.PythonExecuteRule{},
+		&rules.AwsCliRule{},
+		&rules.AzCliRule{},
+		&rules.BrewCaskDependencyRule{},
+		&rules.BrewInstallRule{},
+		&rules.BrewLinkRule{},
+		&rules.BrewReinstallRule{},
+		&rules.BrewUninstallRule{},
+		&rules.BrewUpdateFormulaRule{},
+		&rules.CargoRule{},
+		&rules.CargoNoCommandRule{},
+		&rules.CdCorrectionRule{},
+		&rules.CdCsRule{},
+		&rules.ChocoInstallRule{},
+		&rules.ComposerNotCommandRule{},
+		&rules.CondaMistypeRule{},
+		&rules.CpCreateDestinationRule{},
+		&rules.Cpp11Rule{},
+		&rules.DirtyUntarRule{},
+		&rules.DirtyUnzipRule{},
+		&rules.DjangoSouthGhostRule{},
+		&rules.DjangoSouthMergeRule{},
+		&rules.DnfNoSuchCommandRule{},
+		&rules.DockerImageUsedRule{},
+		&rules.DockerLoginRule{},
+		&rules.DryRule{},
+		&rules.FabCommandNotFoundRule{},
+		&rules.FixAltSpaceRule{},
+		&rules.FixFileRule{},
+		&rules.GemUnknownCommandRule{},
+		&rules.GitAddForceRule{},
+		&rules.GitBisectUsageRule{},
+		&rules.GitBranch0FlagRule{},
+		&rules.GitBranchDeleteRule{},
+		&rules.GitBranchDeleteCheckedOutRule{},
+		&rules.GitBranchListRule{},
+		&rules.GitCloneGitCloneRule{},
+		&rules.GitCloneMissingRule{},
+		&rules.GitCommitAddRule{},
+		&rules.GitCommitAmendRule{},
+		&rules.GitCommitResetRule{},
+		&rules.GitDiffStagedRule{},
+		&rules.GitFixStashRule{},
+		&rules.GitFlagAfterFilenameRule{},
+		&rules.GitHelpAliasedRule{},
+		&rules.GitHookBypassRule{},
+		&rules.GitLfsMistypeRule{},
+		&rules.GitMainMasterRule{},
+		&rules.GitMergeRule{},
+		&rules.GitMergeUnrelatedRule{},
+		&rules.GitNotCommandRule{},
+		&rules.GitPullRule{},
+		&rules.GitPullCloneRule{},
+		&rules.GitPullUncommittedChangesRule{},
+		&rules.GitPushDifferentBranchNamesRule{},
+		&rules.GitPushForceRule{},
+		&rules.GitPushPullRule{},
+		&rules.GitPushWithoutCommitsRule{},
+		&rules.GitRebaseMergeDirRule{},
+		&rules.GitRebaseNoChangesRule{},
+		&rules.GitRemoteDeleteRule{},
+		&rules.GitRemoteSeturlAddRule{},
+		&rules.GitRmLocalModificationsRule{},
+		&rules.GitRmRecursiveRule{},
+		&rules.GitRmStagedRule{},
+		&rules.GitStashRule{},
+		&rules.GitStashPopRule{},
+		&rules.GitTagForceRule{},
+		&rules.GitTwoDashesRule{},
+		&rules.GrepRecursiveRule{},
+		&rules.GradleWrapperRule{},
+		&rules.HasExistsScriptRule{},
+		&rules.HerokuNotCommandRule{},
+		&rules.HostsCliRule{},
+		&rules.GradleNoTaskRule{},
+		&rules.GruntTaskNotFoundRule{},
+		&rules.GulpNotTaskRule{},
+		&rules.IfconfigDeviceNotFoundRule{},
+		&rules.JavaRule{},
+		&rules.JavacRule{},
+		&rules.LeinNotTaskRule{},
+		&rules.LnNoHardLinkRule{},
+		&rules.LnSOrderRule{},
+		&rules.LongFormHelpRule{},
+		&rules.LsLahRule{},
+		&rules.MercurialRule{},
+		&rules.MissingSpaceBeforeSubcommandRule{},
+		&rules.MvnNoCommandRule{},
+		&rules.MvnUnknownLifecyclePhaseRule{},
+		&rules.NixosCmdNotFoundRule{},
+		&rules.NoSuchFileRule{},
+		&rules.NpmMissingScriptRule{},
+		&rules.NpmRunScriptRule{},
+		&rules.NpmWrongCommandRule{},
+		&rules.OmnienvNoSuchCommandRule{},
+		&rules.OpenRule{},
+		&rules.PacmanInvalidOptionRule{},
+		&rules.PacmanNotFoundRule{},
+		&rules.PacmanRule{},
+		&rules.PhpSRule{},
+		&rules.PipInstallRule{},
+		&rules.PipUnknownCommandRule{},
+		&rules.PortAlreadyInUseRule{},
+		&rules.ProveRecursivelyRule{},
+		&rules.PythonModuleErrorRule{},
+		&rules.QuotationMarksRule{},
+		&rules.RailsMigrationsPendingRule{},
+		&rules.ReactNativeCommandUnrecognizedRule{},
+		&rules.RemoveShellPromptLiteralRule{},
+		&rules.RemoveTrailingCedillaRule{},
+		&rules.RmRootRule{},
+		&rules.ScmCorrectionRule{},
+		&rules.SshKnownHostsRule{},
+		&rules.SudoCommandFromUserPathRule{},
+		&rules.SwitchLangRule{},
+		&rules.SystemctlRule{},
+		&rules.TerraformInitRule{},
+		&rules.TerraformNoCommandRule{},
+		&rules.TestPyRule{},
+		&rules.TmuxRule{},
+		&rules.TsuruLoginRule{},
+		&rules.TsuruNotCommandRule{},
+		&rules.UnknownCommandRule{},
+		&rules.UnsudoRule{},
+		&rules.VagrantUpRule{},
+		&rules.WhoisRule{},
+		&rules.WorkonDoesntExistsRule{},
+		&rules.WrongHyphenBeforeSubcommandRule{},
+		&rules.YarnAliasRule{},
+		&rules.YarnCommandNotFoundRule{},
+		&rules.YarnCommandReplacedRule{},
+		&rules.YarnHelpRule{},
+		&rules.YumInvalidOperationRule{},
+	}
 	return &LocalTypo{
 		repo,
 		hs,
+		r,
 	}
 }
 
@@ -78,6 +248,53 @@ func (t *LocalTypo) Typo() (string, []types.MatchResult, error) {
 	if len(parts) == 0 {
 		return command, nil, nil
 	}
+
+	// --- Rules Check (Thefuck style) ---
+	var ruleResults []types.MatchResult
+
+	// Check if command is safe to re-run to capture output
+	// We mimic 'thefuck' behavior which relies on command output for many rules
+	safePrefixes := []string{"git", "mkdir", "brew", "ls", "cd", "grep", "cp", "cat", "echo", "touch", "sed", "docker", "rm", "sl", "cd..", "go", "man", "python", "adb", "ag", "aws", "cargo", "composer", "conda", "choco", "cs", "tar", "unzip", "g++", "clang++", "mv", "dnf", "fab", "gem", "gradle", "grunt", "gulp", "hostscli", "heroku", "ifconfig", "java", "javac", "lein", "ln", "hg", "mvn", "npm", "nix-env", "open", "xdg-open", "gnome-open", "kde-open", "goenv", "nodenv", "pyenv", "rbenv", "react-native", "rm", "sudo", "ssh", "scp", "systemctl", "terraform", "tmux", "tsuru", "vagrant", "whois", "pacman", "php", "pip", "pip2", "pip3", "prove", "workon", "yarn", "yum", "apt", "apt-get", "az"}
+	isSafe := false
+	for _, prefix := range safePrefixes {
+		if strings.HasPrefix(command, prefix) {
+			isSafe = true
+			break
+		}
+	}
+
+	if isSafe {
+		// Run command to get output
+		// We use zsh -c to run the full command line to capture stderr/stdout
+		output, _ := utils.ExecCommandWithOutput("zsh", "-c", command)
+
+		rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+		sysMessages := []string{
+			"Nailed it.",
+			"I got you.",
+			"Fixed it for you.",
+			"Don't worry, happens to the best of us.",
+			"Let's try this instead.",
+		}
+
+		for _, rule := range t.rules {
+			if rule.Match(command, output) {
+				newCmd := rule.GetNewCommand(command, output)
+				if newCmd != command {
+					ruleResults = append(ruleResults, types.MatchResult{
+						Command: newCmd,
+						Score:   1.0,
+						Desc:    sysMessages[rng.Intn(len(sysMessages))],
+					})
+				}
+			}
+		}
+	}
+
+	if len(ruleResults) > 0 {
+		return command, deduplicateResults(ruleResults), nil
+	}
+	// --- End Rules Check ---
 
 	// Get the first word of the command (main command)
 	mainCmd := parts[0]

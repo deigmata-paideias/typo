@@ -19,6 +19,13 @@ func ExecCommand(cmd string, args ...string) (string, error) {
 	return string(output), nil
 }
 
+// ExecCommandWithOutput runs the command and returns output even if it fails
+func ExecCommandWithOutput(cmd string, args ...string) (string, error) {
+	output, err := exec.Command(cmd, args...).CombinedOutput()
+	// Return output regardless of error
+	return string(output), err
+}
+
 // ExecPipeCommand supports pipe commands ExecPipeCommand("git config --list | grep alias")
 func ExecPipeCommand(fullCmd string) (string, error) {
 

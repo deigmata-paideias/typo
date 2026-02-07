@@ -20,16 +20,39 @@ Github Repo：https://github.com/nvbn/thefuck
 
 - 使用 typo 可以，修复上一条 typo 的错误命令；
 - 在忘记具体的命令时，可以模糊搜索并执行。
+- 集成了 `thefuck` 的规则引擎，能够自动修复常见的命令错误（如 `git push` 缺上游、`mkdir` 缺 `-p` 等）。
 
-> 和 thefuck 不同的是，thefuck 使用规则配置，而 typo 依赖系统命令。
+> 和 thefuck 不同的是，thefuck 使用规则配置，而 typo 依赖系统命令 + 内置规则。
+
+### 已支持的规则 (Ported from `thefuck`)
+
+1.  **Git**:
+    *   `git push` -> `git push --set-upstream ...`
+    *   `git checkout <branch_typo>` -> `git checkout <correct_branch>` OR `git checkout -b <new_branch>`
+    *   `git branch <existing_branch>` -> `git checkout <existing_branch>`
+    *   `git add` -> `git add <file> && <cmd>` when file is untracked
+2.  **Shell**:
+    *   `mkdir <dir>` -> `mkdir -p <dir>`
+    *   `cp <dir>` -> `cp -a <dir>`
+    *   `rm <dir>` -> `rm -rf <dir>`
+    *   `cd <missing_dir>` -> `mkdir -p <missing_dir> && cd <missing_dir>`
+    *   `./script` (permission denied) -> `chmod +x ./script && ./script`
+    *   `sudo` (permission denied) -> `sudo <cmd>`
+    *   `ls` (empty) -> `ls -A`
+    *   `grep <pattern> <file>` -> `grep <file> <pattern>` (swapped args)
+    *   `sed s/foo/bar` -> `sed s/foo/bar/` (unterminated s)
+3.  **Modern Tools**:
+    *   `brew instll` -> `brew install`
+    *   `docker bulid` -> `docker build`
 
 ## 实现原理
 
-1. 命令修正：用莱文斯坦距离（Levenshtein distance）等算法计算相似度；
-2. 命令存储：
+1. 规则引擎：首先检查是否有特定的错误模式（如 `git`, `brew`, `grep` 等常见错误），若匹配则直接返回修复建议；
+2. 命令修正：若无特定规则匹配，用莱文斯坦距离（Levenshtein distance）等算法计算相似度；
+3. 命令存储：
    1. 自动扫描 man 里面的命令列表；
    2. 用户自定义的 alias 配置；
-3. 用户选择以执行。
+4. 用户选择以执行。
 
 ## 二进制运行
 
